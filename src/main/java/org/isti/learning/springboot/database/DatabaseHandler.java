@@ -1,10 +1,12 @@
 package org.isti.learning.springboot.database;
 
+import org.isti.learning.springboot.business.domain.Person;
 import org.isti.learning.springboot.business.interfaces.Database;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseHandler implements Database {
-    private static final String DB_DRIVER = "org.h2.Driver";
     private static final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
     private static final String DB_USER = "";
     private static final String DB_PASSWORD = "";
@@ -42,34 +44,41 @@ public class DatabaseHandler implements Database {
         return result;
     }
 
-    public String getData() {
+    public List<Person> getData() {
         Connection connection;
+        List<Person> result = new ArrayList<>();
         try {
             connection = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
         } catch (SQLException e) {
-            return e.getMessage();
+            return result;
         }
         Statement stmt;
-        String result = "";
         try {
             connection.setAutoCommit(false);
             stmt = connection.createStatement();
             try (ResultSet rs = stmt.executeQuery("select * from PERSON")) {
                 while (rs.next()) {
-                    result += String.format("Id %d Name %s\n", rs.getInt("id"), rs.getString("name"));
+                    Person person = new Person();
+                    person.setId(rs.getInt("id"));
+                    person.setName(rs.getString("name"));
+                    result.add(person);
                 }
             }
             stmt.close();
             connection.commit();
         } catch (SQLException e) {
-            result += String.format(SQLEXCEPTION_MESSAGE, e.getLocalizedMessage());
-        } catch (Exception e) {
-            result += String.format(EXCEPTION_MESSAGE, e.getMessage());
+            Person person = new Person();
+            person.setId(-1);
+            person.setName(String.format(SQLEXCEPTION_MESSAGE, e.getLocalizedMessage()));
+            result.add(person);
         } finally {
             try {
                 connection.close();
             } catch (SQLException e) {
-                result += String.format(SQLEXCEPTION_DURING_CLOSING_MESSAGE, e.getMessage());
+                Person person = new Person();
+                person.setId(-1);
+                person.setName(String.format(SQLEXCEPTION_DURING_CLOSING_MESSAGE, e.getMessage()));
+                result.add(person);
             }
         }
         return result;
