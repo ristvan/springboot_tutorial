@@ -59,4 +59,25 @@ public class HelloControllerTest {
         mvc.perform(MockMvcRequestBuilders.delete("/db-drop").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    public void testAddingTwoNames_getReturnsWithXmlThatContainsTwoPeople() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.post("/db-create").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isOk());
+        mvc.perform(MockMvcRequestBuilders.post("/db-insert?id=1&name=Detti").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isOk());
+        mvc.perform(MockMvcRequestBuilders.post("/db-insert?id=2&name=Isti").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isOk());
+        String expectedAnswer = "<answer>" +
+                "<numberOfPeople>2</numberOfPeople>" +
+                "<people>" +
+                "<person><id>1</id><name>Detti</name></person>" +
+                "<person><id>2</id><name>Isti</name></person>" +
+                "</people></answer>";
+        mvc.perform(MockMvcRequestBuilders.get("/db-get").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isOk())
+                .andExpect(content().string(equalTo(expectedAnswer)));
+        mvc.perform(MockMvcRequestBuilders.delete("/db-drop").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isOk());
+    }
 }
